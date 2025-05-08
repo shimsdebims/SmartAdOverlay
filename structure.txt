@@ -1,0 +1,37 @@
+SmartAdOverlay/
+├── app/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/com/smartadoverlay/
+│   │   │   │   ├── MainActivity.kt
+│   │   │   │   ├── service/
+│   │   │   │   │   ├── FrameCaptureService.kt
+│   │   │   │   │   └── OverlayService.kt
+│   │   │   │   ├── ai/
+│   │   │   │   │   ├── ContentAnalyzer.kt
+│   │   │   │   │   ├── ObjectDetector.kt
+│   │   │   │   │   └── ContentClassifier.kt
+│   │   │   │   ├── ads/
+│   │   │   │   │   ├── AdSelectionEngine.kt
+│   │   │   │   │   ├── AdPlacementStrategy.kt
+│   │   │   │   │   └── AdContent.kt
+│   │   │   │   └── util/
+│   │   │   │       ├── ImageUtils.kt
+│   │   │   │       └── PermissionHelper.kt
+│   │   │   ├── res/
+│   │   │   │   ├── layout/
+│   │   │   │   │   ├── activity_main.xml
+│   │   │   │   │   └── overlay_layout.xml
+│   │   │   │   ├── drawable/
+│   │   │   │   │   ├── ad_sports.png
+│   │   │   │   │   ├── ad_entertainment.png
+│   │   │   │   │   ├── ad_cooking.png
+│   │   │   │   │   └── ad_music.png
+│   │   │   │   └── values/
+│   │   │   │       ├── strings.xml
+│   │   │   │       └── colors.xml
+│   │   │   └── AndroidManifest.xml
+│   │   └── test/
+│   └── build.gradle
+├── build.gradle
+└── settings.gradle
