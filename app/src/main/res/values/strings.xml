@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Smart Ad Overlay</string>
+    <string name="service_notification_title">Smart Ad Overlay</string>
+    <string name="service_notification_text">Analyzing content for intelligent ad placement</string>
+    <string name="overlay_permission_required">Overlay permission is required to display ads</string>
+    <string name="permission_denied">Required permissions were denied</string>
+    <string name="service_started">Smart Ad Overlay services started</string>
+    <string name="service_stopped">Smart Ad Overlay services stopped</string>
+</resources>

@@ -1,3 +1,4 @@
+
 package com.smartadoverlay.ads
 
 import android.graphics.Bitmap
