@@ -93,3 +93,5 @@ class MainActivity : AppCompatActivity() {
         }
     }
 }
+val hdmiIntent = packageManager.getLaunchIntentForPackage("com.vendor.hdmiin")
+startActivity(hdmiIntent)

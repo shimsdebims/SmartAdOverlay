@@ -35,66 +35,54 @@ import kotlinx.coroutines.launch
 import java.nio.ByteBuffer
 
 class FrameCaptureService : Service() {
-    private val TAG = "FrameCaptureService"
-    private val NOTIFICATION_ID = 1
-    private val CHANNEL_ID = "FrameCaptureChannel"
-    
-    private lateinit var contentAnalyzer: ContentAnalyzer
-    private lateinit var contentClassifier: ContentClassifier
-    
-    private val serviceScope = CoroutineScope(Dispatchers.Default)
-    private var captureJob: Job? = null
-    
-    // For display content capture
-    private var imageReader: ImageReader? = null
-    private var displayWidth = 1280
-    private var displayHeight = 720
-    
-    override fun onCreate() {
-        super.onCreate()
-        createNotificationChannel()
-        
-        // Initialize components
-        contentAnalyzer = ContentAnalyzer(this)
-        contentClassifier = ContentClassifier(this)
-        
-        // Get screen metrics
-        val metrics = DisplayMetrics()
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        windowManager.defaultDisplay.getMetrics(metrics)
-        displayWidth = metrics.widthPixels
-        displayHeight = metrics.heightPixels
-    }
-    
+    private lateinit var mediaProjection: MediaProjection
+    private lateinit var virtualDisplay: VirtualDisplay
+    private lateinit var imageReader: ImageReader
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val notification = createNotification()
-        startForeground(NOTIFICATION_ID, notification)
-        
-        startFrameCapture()
-        
+        startForeground(NOTIFICATION_ID, createNotification())
+        startCapture()
         return START_STICKY
     }
-    
-    private fun startFrameCapture() {
-        captureJob?.cancel()
-        captureJob = serviceScope.launch {
-            try {
-                setupHDMIFrameCapture()
-                
-                // Capture frames periodically
-                while (true) {
-                    captureCurrentFrame()?.let { frame ->
-                        processFrame(frame)
-                    }
-                    delay(2000) // Capture every 2 seconds
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error in frame capture: ${e.message}")
-                // Fall back to screenshot method if HDMIin direct access fails
-                startFallbackFrameCapture()
-            }
+
+    private fun startCapture() {
+        val metrics = resources.displayMetrics
+        imageReader = ImageReader(metrics.widthPixels, metrics.heightPixels, 
+            PixelFormat.RGBA_8888, 2)
+
+        // Use MediaProjection to capture HDMIin app's output
+        val mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+        startActivityForResult(captureIntent, REQUEST_CODE_SCREEN_CAPTURE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == REQUEST_CODE_SCREEN_CAPTURE) {
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data!!)
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                "HDMIin_Capture",
+                imageReader.width, imageReader.height, metrics.densityDpi,
+                DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                imageReader.surface, null, null
+            )
+            imageReader.setOnImageAvailableListener({ reader ->
+                val image = reader.acquireLatestImage()
+                processImage(image)
+                image.close()
+            }, Handler(Looper.getMainLooper()))
         }
     }
+
+    private fun processImage(image: Image) {
+        val bitmap = ImageUtils.imageToBitmap(image) // Convert to Bitmap
+        contentAnalyzer.analyzeFrame(bitmap) { objects ->
+            val category = contentClassifier.classifyContent(objects)
+            sendBroadcast(Intent("CONTENT_CLASSIFIED").apply {
+                putExtra("category", category)
+            })
+        }
+    }
+}
     
     // This attempts to access HDMIin app's frames directly
     // The exact implementation will depend on your box's capabilities
